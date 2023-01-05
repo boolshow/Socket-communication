@@ -26,7 +26,7 @@ namespace 客户端
     {
         //循环用到socket
         public Socket socket = null;
-        static List<IPAddress> iPAddresses = GetIPAddresses();
+        static readonly List<IPAddress> iPAddresses = GetIPAddresses();
         //发送消息需要提供
         public IPEndPoint sendPoint = new(iPAddresses[0], 12345);
         //public IPEndPoint sendPoint = new(IPAddress.Broadcast, 12345);
@@ -37,56 +37,100 @@ namespace 客户端
             Initenter();
         }
 
-        private void Initenter()
+        private async void Initenter()
         {
             try
             {
-                
+
                 //创建负责通信的Socket
                 socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
                 {
                     SendTimeout = 10000
                 };
                 IPEndPoint point = new(iPAddresses[0], 12345);
+                await socket.ConnectAsync(point);
+                await Task.Run(async () => await ForRecive(socket));
 
-                //获得要链接的远程服务器应用程序的IP地址和端口号
-                socket.Connect(point);
-
-                //Console.WriteLine("连接成功");
-                Task.Run(()=>Recive(socket));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
         }
-        /// <summary>
-        /// 不停的接受服务器发来的消息
-        /// </summary>
-        public void Recive(Socket socket)
+
+
+        /// <summary>  
+        /// 发送消息  
+        /// </summary>  
+        /// <param name="socket"></param>  
+        /// <param name="message"></param>  
+        private async Task<int> AsynSend(Socket socket, string message)
         {
-            Action<string, string> action = new(UIupdate);
-            EndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, 12345);
-            while (true)
+            if (socket == null || message == string.Empty) return 0;
+            //编码  
+            byte[] data = Encoding.UTF8.GetBytes(message);
+            try
             {
-                //缓冲区
-                byte[] vs = new byte[1024];
-                //参数  缓冲区   获取到的内容保存到了iPEndPoint
-                if (!socket.Connected)
-                {
-                    MessageBox.Show("与服务器断开链接");
-                }
-                else
-                {
-                    int r = socket.Receive(vs);
-                    string p = Encoding.UTF8.GetString(vs);
-                    //UI界面的内容和获取到的内容在不同的线程中，所以要跨线程调用
-                    Dispatcher.Invoke(action, DateTime.Now.ToString(), p);//在这里执行action，获取ip和内容
-                }
+                return await socket.SendAsync(data);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("异常信息：{0}", ex.Message);
+                return 0;
             }
         }
 
-        //对ui线程进行操作
+        /// <summary>  
+        /// 接收消息  
+        /// </summary>  
+        /// <param name="socket"></param>  
+        private async Task<string> AsynRecive(Socket socket)
+        {
+            byte[] data = new byte[1024];
+            try
+            {
+                int length = await socket.ReceiveAsync(data);
+                if (length > 0)
+                {
+                    string messgae = Encoding.UTF8.GetString(data);
+                    return messgae;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("异常信息：{0}", ex.Message);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 循环接受消息
+        /// </summary>
+        /// <param name="_socket"></param>
+        /// <returns></returns>
+        private async Task ForRecive(Socket _socket)
+        {
+            Action<string, string> action = new(UIupdate);
+            string messgae = await AsynRecive(_socket);
+            if (messgae != null)
+            {
+                //UI界面的内容和获取到的内容在不同的线程中，所以要跨线程调用
+                Dispatcher.Invoke(action, DateTime.Now.ToString(), messgae);//在这里执行action，获取内容
+            }
+            //递归
+            await ForRecive(socket);
+        }
+
+        #region
+        /// <summary>
+        /// 对ui线程进行操作
+        /// </summary>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
         private void UIupdate(string arg1, string arg2)
         {
             StringBuilder stringBuilder = new();
@@ -116,12 +160,10 @@ namespace 客户端
             return iPAddresses;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
             //发送消息
-
-            byte[] vs = Encoding.UTF8.GetBytes(MsgBox.Text);
-            socket.SendTo(vs, sendPoint);
+            int i = await AsynSend(socket, MsgBox.Text);
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -130,5 +172,6 @@ namespace 客户端
             socket?.Close();
             Application.Current.Shutdown(0);
         }
+        #endregion
     }
 }

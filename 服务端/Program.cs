@@ -4,8 +4,8 @@ using System.Net;
 using System.Text;
 
 int _port = 12345;
-int usernumber = 0;
-Socket clientSocket = null;
+
+byte[] data = new byte[1024];
 //将远程客户端的IP地址和Socket存入集合中
 Dictionary<string, Socket> dicSocket = new();
 
@@ -22,13 +22,11 @@ void StartListen()
         //创建IP对象
         List<IPAddress> iPAddresses = GetIPAddresses();
         //创建IP地址和端口号对象
-       // IPAddress ip = IPAddress.Any; 
+        // IPAddress ip = IPAddress.Any; 
         IPEndPoint point = new(iPAddresses[0], _port);
-
-        //_socket.Bind(new IPEndPoint(iPAddresses[0], _port));
         _socket.Bind(point);
         //设置最大连接数
-        //_socket.Listen();
+        //_socket.Listen(int.MaxValue);
         Console.WriteLine("监听{0}消息成功", _socket.LocalEndPoint);
         //开始监听
         Task.Run(() => udpReceiveMessage(_socket));
@@ -40,89 +38,24 @@ void StartListen()
     }
 }
 
-void SendMsg(Socket _socket,IPEndPoint remoteEndPoint,string msg)
+async Task udpReceiveMessage(Socket _socket)
 {
-    _socket.SendTo(Encoding.UTF8.GetBytes(msg), remoteEndPoint);
-}
-
-void udpReceiveMessage(Socket _socket)
-{
-    while (true)
-    {
-        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-        byte[] data = new byte[1024];
-        int length = _socket.ReceiveFrom(data, ref remoteEndPoint);//这个方法会把数据的来源(ip:port)放到第二个参数上
-        string message = Encoding.UTF8.GetString(data, 0, length);
-        Console.WriteLine("从ip：" + (remoteEndPoint as IPEndPoint).Address.ToString() + "：" + (remoteEndPoint as IPEndPoint).Port + "收到了数据：" + message);
-        Task.Run(() => SendMsg(_socket,remoteEndPoint as IPEndPoint, message));
-    }
-
-}
-/// <summary>
-/// 监听客户端连接
-/// </summary>
-void ListenClientConnect(Socket _socket)
-{
-    try
-    {
-        while (true)
-        {
-            try
-            {
-                //Socket创建的新连接
-                clientSocket = _socket.Accept();
-            } catch (Exception ex) {
-                //提示套接字监听异常     
-                Console.WriteLine(ex.Message);
-                break;
-            }
-            //客户端网络结点号  
-            string remoteEndPoint = clientSocket.RemoteEndPoint.ToString();
-            //将远程连接的客户端的IP和Socket存入集合中
-            dicSocket.Add(remoteEndPoint, clientSocket);
-            //获取客户端的IP和端口号  
-            IPAddress clientIP = (clientSocket.RemoteEndPoint as IPEndPoint).Address;
-            int clientPort = (clientSocket.RemoteEndPoint as IPEndPoint).Port;
-            usernumber++;
-            string text = string.Format("服务端连接成功!当前客户端在线用户数量{0}-----{1}", usernumber,DateTime.Now);
-            string sendmsg = string.Format("本地IP:{0},clientIP：{1}", clientIP.ToString(), clientPort);
-            clientSocket.Send(Encoding.UTF8.GetBytes(text));
-            clientSocket.Send(Encoding.UTF8.GetBytes(sendmsg));
-            //接收客户端消息线程
-            Task.Run(() => ReceiveMessage(clientSocket));
-        }
-    }
-    catch (Exception)
-    {
-    }
-}
-
-/// <summary>
-/// 接收客户端消息
-/// </summary>
-/// <param name="socket">来自客户端的socket</param>
-void ReceiveMessage(Socket clientSocket)
-{
-    while (true)
-    {
-        try
-        {
-            byte[] vs = new byte[1024];
-            //获取从客户端发来的数据
-            int length = clientSocket.Receive(vs);
-            Console.WriteLine("接收客户端{0},消息{1}", clientSocket.RemoteEndPoint, Encoding.UTF8.GetString(vs, 0, length));
-            clientSocket.Send(vs);
-        }
-        catch (Exception ex)
-        {
-            dicSocket.Remove(clientSocket.RemoteEndPoint.ToString());
-            usernumber--;
-            Console.WriteLine(ex.Message);
-            clientSocket.Shutdown(SocketShutdown.Both);
-            clientSocket.Close();
-            break;
-        }
-    }
+    EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+    //接收数据并返回发送主机的端点
+    var SocketReceiveFromResult = await _socket.ReceiveFromAsync(data, remoteEndPoint);
+    //将接收到的数据打印出来，发送方采用什么编码方式，此处就采用什么编码方式 转换成字符串
+    string messgae = Encoding.UTF8.GetString(data, 0, SocketReceiveFromResult.ReceivedBytes);
+    IPEndPoint iPEndPoint = (IPEndPoint)SocketReceiveFromResult.RemoteEndPoint;
+    string host = $"{iPEndPoint.Address}:{iPEndPoint.Port}";
+    Console.WriteLine("客户端IP地址:{0} 消息内容：{1}", host,messgae);
+    //定义要发送回客户端的消息，采用UTF-8 编码，    
+    byte[] sendData = Encoding.UTF8.GetBytes("200");
+    //开始异步发送消息  epSender是上次接收消息时的客户端IP和端口信息
+    int number= await _socket.SendToAsync(sendData, SocketReceiveFromResult.RemoteEndPoint);
+    //重新实例化接收数据字节数组
+    data = new byte[1024];
+    //递归
+    await udpReceiveMessage(_socket);
 }
 
 //获取ip地址
