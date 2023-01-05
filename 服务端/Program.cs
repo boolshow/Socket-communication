@@ -18,13 +18,9 @@ void StartListen()
     try
     {
         // 实例化套接字(IP4寻找协议,流式协议,TCP协议)
-        Socket _socket = new(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Udp);
+        Socket _socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
         //创建IP对象
         List<IPAddress> iPAddresses = GetIPAddresses();
-        foreach (IPAddress ip in iPAddresses)
-        {
-            Console.WriteLine(ip.ToString());
-        }
         //创建IP地址和端口号对象
        // IPAddress ip = IPAddress.Any; 
         IPEndPoint point = new(iPAddresses[0], _port);
@@ -32,10 +28,10 @@ void StartListen()
         //_socket.Bind(new IPEndPoint(iPAddresses[0], _port));
         _socket.Bind(point);
         //设置最大连接数
-        _socket.Listen(int.MaxValue);
+        //_socket.Listen();
         Console.WriteLine("监听{0}消息成功", _socket.LocalEndPoint);
         //开始监听
-        Task.Run(() => ListenClientConnect(_socket));
+        Task.Run(() => udpReceiveMessage(_socket));
 
     }
     catch (Exception ex)
@@ -44,9 +40,27 @@ void StartListen()
     }
 }
 
-    /// <summary>
-    /// 监听客户端连接
-    /// </summary>
+void SendMsg(Socket _socket,IPEndPoint remoteEndPoint,string msg)
+{
+    _socket.SendTo(Encoding.UTF8.GetBytes(msg), remoteEndPoint);
+}
+
+void udpReceiveMessage(Socket _socket)
+{
+    while (true)
+    {
+        EndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+        byte[] data = new byte[1024];
+        int length = _socket.ReceiveFrom(data, ref remoteEndPoint);//这个方法会把数据的来源(ip:port)放到第二个参数上
+        string message = Encoding.UTF8.GetString(data, 0, length);
+        Console.WriteLine("从ip：" + (remoteEndPoint as IPEndPoint).Address.ToString() + "：" + (remoteEndPoint as IPEndPoint).Port + "收到了数据：" + message);
+        Task.Run(() => SendMsg(_socket,remoteEndPoint as IPEndPoint, message));
+    }
+
+}
+/// <summary>
+/// 监听客户端连接
+/// </summary>
 void ListenClientConnect(Socket _socket)
 {
     try

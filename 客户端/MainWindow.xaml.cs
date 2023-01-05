@@ -26,8 +26,10 @@ namespace 客户端
     {
         //循环用到socket
         public Socket socket = null;
+        static List<IPAddress> iPAddresses = GetIPAddresses();
         //发送消息需要提供
-        public IPEndPoint sendPoint = new(IPAddress.Broadcast, 12345);
+        public IPEndPoint sendPoint = new(iPAddresses[0], 12345);
+        //public IPEndPoint sendPoint = new(IPAddress.Broadcast, 12345);
 
         public MainWindow()
         {
@@ -39,9 +41,9 @@ namespace 客户端
         {
             try
             {
-                List<IPAddress> iPAddresses = GetIPAddresses();
+                
                 //创建负责通信的Socket
-                socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Udp)
+                socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
                 {
                     SendTimeout = 10000
                 };
@@ -50,8 +52,8 @@ namespace 客户端
                 //获得要链接的远程服务器应用程序的IP地址和端口号
                 socket.Connect(point);
 
-                Console.WriteLine("连接成功");
-                Task.Run(Recive);
+                //Console.WriteLine("连接成功");
+                Task.Run(()=>Recive(socket));
             }
             catch(Exception ex)
             {
@@ -61,7 +63,7 @@ namespace 客户端
         /// <summary>
         /// 不停的接受服务器发来的消息
         /// </summary>
-        public void Recive()
+        public void Recive(Socket socket)
         {
             Action<string, string> action = new(UIupdate);
             EndPoint iPEndPoint = new IPEndPoint(IPAddress.Any, 12345);
