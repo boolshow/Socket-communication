@@ -16,6 +16,11 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Drawing;
 using static System.Collections.Specialized.BitVector32;
+using Entity;
+using System.Text.Json.Serialization;
+using Entity.Json;
+using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace 客户端
 {
@@ -42,13 +47,12 @@ namespace 客户端
             try
             {
 
-                //创建负责通信的Socket
-                socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+                socket = await GetSocketConnect();
+                if(socket is null)
                 {
-                    SendTimeout = 10000
-                };
-                IPEndPoint point = new(iPAddresses[0], 12345);
-                await socket.ConnectAsync(point);
+                    MessageBox.Show("与服务器断开连接!");
+                    return;
+                }
                 await Task.Run(async () => await ForRecive(socket));
 
             }
@@ -58,6 +62,55 @@ namespace 客户端
             }
         }
 
+
+
+        private async Task<Socket> GetSocketConnect()
+        {
+            try
+            {
+                WriteOffEntity writeOff = new()
+                {
+                    CheckOffCode = CheckOffCodeEn.Open,
+                    CheckOffInformation = "创建连接!"
+                };
+                //创建负责通信的Socket
+                Socket socket = new(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp)
+                {
+                    SendTimeout = 10000
+                };
+                IPEndPoint point = new(iPAddresses[0], 12345);
+                await socket.ConnectAsync(point);
+
+                string conntext = System.Text.Json.JsonSerializer.Serialize(writeOff);
+                //发送连接信息
+                await AsynSend(socket, conntext);
+                //获取响应信息
+                bool ispoll = true;
+                //定义一个超时时间(单位毫秒)
+                int timeout = 10000;
+                DateTime starttime = DateTime.Now;
+                while (ispoll)
+                {
+                    DateTime currentTime = DateTime.Now;
+                    if ((currentTime - starttime).Milliseconds > timeout)
+                        break;
+                    string messgae = await AsynRecive(socket);
+                    var retjson = JsonConvert.DeserializeObject<dynamic>(messgae); 
+                    int code = retjson["CheckOffCode"] ?? 0;
+                    if (code == (int)CheckOffCodeEn.OK)
+                    {
+                        ispoll = false;
+                        break;
+                    }
+                }
+                return socket;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return null;
+            }
+        }
 
         /// <summary>  
         /// 发送消息  
@@ -163,7 +216,7 @@ namespace 客户端
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
             //发送消息
-            int i = await AsynSend(socket, MsgBox.Text);
+            _ = await AsynSend(socket, MsgBox.Text);
         }
 
         private void Window_Closed(object sender, EventArgs e)
