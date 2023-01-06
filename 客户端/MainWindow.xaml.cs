@@ -1,26 +1,13 @@
-﻿using System;
+﻿using Entity;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Drawing;
-using static System.Collections.Specialized.BitVector32;
-using Entity;
-using System.Text.Json.Serialization;
-using Entity.Json;
-using System.Text.Json;
-using Newtonsoft.Json;
 
 namespace 客户端
 {
@@ -176,6 +163,48 @@ namespace 客户端
             }
             //递归
             await ForRecive(socket);
+        }
+
+        /// <summary>
+        /// 超时判断
+        /// </summary>
+        /// <param name="_socket"></param>
+        /// <param name="checkOff"></param>
+        /// <returns></returns>
+        private async Task<bool> GetRustMesAsync(Socket _socket, CheckOffCodeEn checkOff)
+        {
+            bool resul = false;
+            WriteOffEntity writeOff = new()
+            {
+                CheckOffCode = checkOff,
+                CheckOffInformation = "创建连接!"
+            };
+            string conntext = System.Text.Json.JsonSerializer.Serialize(writeOff);
+            //发送连接信息
+            await AsynSend(_socket, conntext);
+            //获取响应信息
+            bool ispoll = true;
+            //定义一个超时时间(单位毫秒)
+            int timeout = 10000;
+            DateTime starttime = DateTime.Now;
+            while (ispoll)
+            {
+                DateTime currentTime = DateTime.Now;
+                if ((currentTime - starttime).Milliseconds > timeout)
+                {
+                    resul = false;
+                    break;
+                }
+                string messgae = await AsynRecive(_socket);
+                var retjson = JsonConvert.DeserializeObject<dynamic>(messgae);
+                int code = retjson["CheckOffCode"] ?? 0;
+                if (code == (int)CheckOffCodeEn.OK)
+                {
+                    resul = true;
+                    break;
+                }
+            }
+            return resul;
         }
 
         #region

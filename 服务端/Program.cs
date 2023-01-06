@@ -1,11 +1,9 @@
 ﻿// See https://aka.ms/new-console-template for more information
-using System.Net.Sockets;
-using System.Net;
-using System.Text;
-using System.Text.Json;
 using Entity;
-using System.Net.Http.Json;
 using Newtonsoft.Json;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
 int Udp_port = 12345;
 int Tcp_port = 12346;
@@ -33,7 +31,6 @@ void udpListen()
         Console.WriteLine("Udp协议,监听{0}成功", _socket.LocalEndPoint);
         //开始监听
         Task.Run(() => udpReceiveMessage(_socket));
-
     }
     catch (Exception ex)
     {
@@ -73,7 +70,7 @@ async Task TcpReceiveMessage(Socket _socket)
     string messgae = Encoding.UTF8.GetString(data, 0, SocketReceiveFromResult.ReceivedBytes);
     IPEndPoint iPEndPoint = (IPEndPoint)SocketReceiveFromResult.RemoteEndPoint;
     string host = $"{iPEndPoint.Address}:{iPEndPoint.Port}";
-    Console.WriteLine("客户端IP地址:{0} 消息内容：{1}", host, messgae);
+    Console.WriteLine("客户端IP地址:{0} 消息内容:{1}", host, messgae);
     //定义要发送回客户端的消息，采用UTF-8 编码，    
     byte[] sendData = Encoding.UTF8.GetBytes("200");
     //开始异步发送消息  epSender是上次接收消息时的客户端IP和端口信息
@@ -106,7 +103,6 @@ async Task udpReceiveMessage(Socket _socket)
             CheckOffCode = (CheckOffCodeEn)retcode,
             CheckOffInformation = null
         };
-
         //定义要发送回客户端的消息，采用UTF-8 编码，    
         byte[] sendData = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(writeOffEntity));
         //开始异步发送消息  epSender是上次接收消息时的客户端IP和端口信息
@@ -140,7 +136,6 @@ List<IPAddress> GetIPAddresses()
         {
             iPAddresses.Add(ip);
         }
-
     }
     return iPAddresses;
 }
