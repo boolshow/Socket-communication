@@ -11,5 +11,7 @@ namespace Entity
     {
         public ProtocolType protocolType { get; set; }
         public int port { get; set; }
+
+        public bool ser { get; set; }
     }
 }

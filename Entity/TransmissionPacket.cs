@@ -1,15 +1,15 @@
 ﻿namespace Entity
 {
-    public class TransmissionPacket
+    public class TransmissionPacket:WriteOffEntity
     {
         /// <summary>
         /// 发送人Id
         /// </summary>
-        public int SendID { get; set; }
+        public int? SendID { get; set; }
         /// <summary>
         /// 接收人Id
         /// </summary>
-        public int accepterID { get; set; }
+        public int? accepterID { get; set; }
         /// <summary>
         /// 消息体
         /// </summary>
@@ -17,7 +17,7 @@
         /// <summary>
         /// 类型
         /// </summary>
-        public int Type { get; set; }
+        public int? Type { get; set; }
         /// <summary>
         /// 日期
         /// </summary>

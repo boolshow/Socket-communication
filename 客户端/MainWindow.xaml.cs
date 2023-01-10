@@ -33,22 +33,19 @@ namespace 客户端
         {
             try
             {
-
                 socket = await GetSocketConnect();
-                if(socket is null)
+                if (socket is null)
                 {
                     MessageBox.Show("与服务器断开连接!");
                     return;
                 }
-                await Task.Run(async () => await ForRecive(socket));
-
+                await Task.Run(() =>ForRecive(socket));
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
         }
-
 
 
         private async Task<Socket> GetSocketConnect()
@@ -82,7 +79,7 @@ namespace 客户端
                     if ((currentTime - starttime).Milliseconds > timeout)
                         break;
                     string messgae = await AsynRecive(socket);
-                    var retjson = JsonConvert.DeserializeObject<dynamic>(messgae); 
+                    var retjson = JsonConvert.DeserializeObject<dynamic>(messgae);
                     int code = retjson["CheckOffCode"] ?? 0;
                     if (code == (int)CheckOffCodeEn.OK)
                     {
@@ -102,7 +99,7 @@ namespace 客户端
         /// <summary>  
         /// 发送消息  
         /// </summary>  
-        /// <param name="socket"></param>  
+        /// <param name="socket"></param>   
         /// <param name="message"></param>  
         private async Task<int> AsynSend(Socket socket, string message)
         {
@@ -171,15 +168,10 @@ namespace 客户端
         /// <param name="_socket"></param>
         /// <param name="checkOff"></param>
         /// <returns></returns>
-        private async Task<bool> GetRustMesAsync(Socket _socket, CheckOffCodeEn checkOff)
+        private async Task<bool> GetRustMesAsync(Socket _socket, TransmissionPacket transmission)
         {
             bool resul = false;
-            WriteOffEntity writeOff = new()
-            {
-                CheckOffCode = checkOff,
-                CheckOffInformation = "创建连接!"
-            };
-            string conntext = System.Text.Json.JsonSerializer.Serialize(writeOff);
+            string conntext = System.Text.Json.JsonSerializer.Serialize(transmission);
             //发送连接信息
             await AsynSend(_socket, conntext);
             //获取响应信息
@@ -223,7 +215,7 @@ namespace 客户端
             {
                 Content = stringBuilder.ToString()
             };
-            MsgWindow.Children.Add(label);
+            Message1.Children.Add(label);
         }
 
         //获取ip地址
@@ -233,11 +225,10 @@ namespace 客户端
 
             foreach (IPAddress ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
             {
-                if (ip.AddressFamily.ToString() == "InterNetwork")
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
                 {
                     iPAddresses.Add(ip);
                 }
-
             }
             return iPAddresses;
         }
@@ -245,7 +236,7 @@ namespace 客户端
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
             //发送消息
-            _ = await AsynSend(socket, MsgBox.Text);
+            _ = await AsynSend(socket, Text.Text);
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -255,5 +246,6 @@ namespace 客户端
             Application.Current.Shutdown(0);
         }
         #endregion
+
     }
 }

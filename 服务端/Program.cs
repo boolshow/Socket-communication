@@ -16,6 +16,10 @@ Dictionary<string, Socket> dicSocket = new();
 Console.WriteLine("Hello, World!");
 TcpListen();
 udpListen();
+
+SocketConnect socketConnect=new SocketConnect();
+var a=socketConnect;
+
 Console.ReadKey();
 
 //socket udp
@@ -52,7 +56,6 @@ void TcpListen()
         Console.WriteLine("Tcp协议,监听{0}成功", _socket.LocalEndPoint);
         //开始监听
         Task.Run(() => TcpReceiveMessage(_socket));
-
     }
     catch (Exception ex)
     {
@@ -80,7 +83,6 @@ async Task TcpReceiveMessage(Socket _socket)
     //递归
     await TcpReceiveMessage(_socket);
 }
-
 //udp消息处理
 async Task udpReceiveMessage(Socket _socket)
 {
@@ -98,10 +100,10 @@ async Task udpReceiveMessage(Socket _socket)
         int code = obj?["CheckOffCode"] ?? 0;
         int retcode = Returnclientinformation(code);
 
-        WriteOffEntity writeOffEntity = new()
+        TransmissionPacket writeOffEntity = new()
         {
             CheckOffCode = (CheckOffCodeEn)retcode,
-            CheckOffInformation = null
+            Message = obj?["Message"]
         };
         //定义要发送回客户端的消息，采用UTF-8 编码，    
         byte[] sendData = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(writeOffEntity));

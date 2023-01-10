@@ -5,17 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:客户端"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        <Border BorderThickness="2" BorderBrush="Black" Margin="16,30,181,359" Grid.ColumnSpan="4" Grid.Column="1">
-            <TextBox x:Name="MsgBox" Width="600" Height="30"></TextBox>
+        Title="MainWindow" Height="463" Width="800">
+    <Grid Margin="0,0,0,-5">
+        <ListView d:ItemsSource="{d:SampleData ItemCount=5}" HorizontalAlignment="Left" Width="234">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Border BorderBrush="#FFABADB3" BorderThickness="1" Margin="239,40,10,176">
+            <WrapPanel x:Name="Message1"/>
         </Border>
-        <Border BorderThickness="2" BorderBrush="Black" Margin="492,30,26,359" Grid.Column="4">
-            <Button Click="Button_Click">发送</Button>
-        </Border>
-
-        <StackPanel x:Name="MsgWindow" Width="740" Margin="51,95,109,27" Grid.Column="3" Grid.ColumnSpan="2">
-
-        </StackPanel>
+        <TextBox x:Name="Text" Margin="239,0,10,53" TextWrapping="Wrap" FontSize="14" Height="100" VerticalAlignment="Bottom"/>
+        <Button Content="发送" Margin="0,0,10,10" FontSize="14" Background="#FF1F95E0"  BorderBrush="#FF1789B9" Height="37" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="113" Foreground="#FF36E8F5" Click="Button_Click"/>
     </Grid>
 </Window>
