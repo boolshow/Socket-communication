@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "服务端", "服务端\服�
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLHelper", "SQLHelper\SQLHelper.csproj", "{181018CC-1D40-467C-BFD0-AD123F48510B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Entity", "Entity\Entity.csproj", "{C30BC7C6-D0C0-4FE7-AAB1-139F9E2731B7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Entity", "Entity\Entity.csproj", "{C30BC7C6-D0C0-4FE7-AAB1-139F9E2731B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service", "Service\Service.csproj", "{2F958A06-7144-443D-9BB4-EDEDB3289D34}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{C30BC7C6-D0C0-4FE7-AAB1-139F9E2731B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C30BC7C6-D0C0-4FE7-AAB1-139F9E2731B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C30BC7C6-D0C0-4FE7-AAB1-139F9E2731B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2F958A06-7144-443D-9BB4-EDEDB3289D34}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2F958A06-7144-443D-9BB4-EDEDB3289D34}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2F958A06-7144-443D-9BB4-EDEDB3289D34}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2F958A06-7144-443D-9BB4-EDEDB3289D34}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -235,8 +235,17 @@ namespace 客户端
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
+            TransmissionPacket transmissionPacket = new()
+            {
+                SendID=0,
+                accepterID=0,
+                Message=Text.Text,
+                Type=1,
+                DateTime=DateTime.Now,
+            };
+            var resul = await GetRustMesAsync(socket, transmissionPacket);
             //发送消息
-            _ = await AsynSend(socket, Text.Text);
+            //_ = await AsynSend(socket, Text.Text);
         }
 
         private void Window_Closed(object sender, EventArgs e)

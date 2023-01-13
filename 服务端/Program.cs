@@ -16,11 +16,8 @@ Dictionary<string, Socket> dicSocket = new();
 Console.WriteLine("Hello, World!");
 TcpListen();
 udpListen();
+await Task.Delay(-1);
 
-SocketConnect socketConnect=new SocketConnect();
-var a=socketConnect;
-
-Console.ReadKey();
 
 //socket udp
 void udpListen()
@@ -96,7 +93,7 @@ async Task udpReceiveMessage(Socket _socket)
     Console.WriteLine("客户端IP地址:{0} 消息内容：{1}", host, messgae);
     if (!string.IsNullOrWhiteSpace(messgae))
     {
-        var obj =JsonConvert.DeserializeObject<dynamic>(messgae);
+        var obj = JsonConvert.DeserializeObject<dynamic>(messgae);
         int code = obj?["CheckOffCode"] ?? 0;
         int retcode = Returnclientinformation(code);
 
@@ -134,7 +131,7 @@ List<IPAddress> GetIPAddresses()
 
     foreach (IPAddress ip in Dns.GetHostEntry(Dns.GetHostName()).AddressList)
     {
-        if (ip.AddressFamily.ToString() == "InterNetwork")
+        if (ip.AddressFamily == AddressFamily.InterNetwork)
         {
             iPAddresses.Add(ip);
         }
